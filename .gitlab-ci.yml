@@ -1,0 +1,84 @@
+stages:
+  - build
+  - test
+  - publish
+
+variables:
+  PACKAGE_REGISTRY_URL: "http://223.255.179.20:8000/api/v4/projects/$CI_PROJECT_ID/packages/generic/$CI_PROJECT_NAME/$CI_COMMIT_REF_NAME"
+
+before_script:
+  - echo "before script"
+
+build_cpp_project:
+  stage: build
+  needs: []
+  script:
+    - echo $env:ONEDRIVE_HKCLR
+    - echo $env:THIRD_PARTY_LIBRARY_DIR
+    - mkdir build
+    - cmake -DDISABLE_PYTHON=ON -DCMAKE_INSTALL_PREFIX="./build/install" -DTHIRD_PARTY_LIBRARY_DIR="$env:THIRD_PARTY_LIBRARY_DIR" -S. -B./build -G "Visual Studio 16 2019" -T host=x64 -A x64
+    - cmake --build ./build --config Release --target ALL_BUILD -j 18
+    - cmake --install ./build --config Release
+    - cmake -DDISABLE_PYTHON=ON -DCMAKE_INSTALL_PREFIX="./build/install" -DTHIRD_PARTY_LIBRARY_DIR="$env:THIRD_PARTY_LIBRARY_DIR" -S. -B./build -G "Visual Studio 16 2019" -T host=x64 -A x64
+    - cmake --build ./build --config Debug --target ALL_BUILD -j 18
+    - cmake --install ./build --config Debug
+  artifacts:
+    expire_in: 1 hour
+    paths:
+      - build/install
+      - build/bin/Release
+
+# test_cpp:
+#   stage: test
+#   needs: [build_cpp_project]
+#   script:
+#     - echo "Test stage"
+#     - cd build/bin/Release
+#     - echo "Debugging CI/CD Environment"
+#     - echo "=========================="
+#     - echo "System Information:"
+#     - systeminfo | findstr /B /C:"OS Name" /C:"OS Version" /C:"System Type"
+#     - echo "=========================="
+#     - echo "Current User:"
+#     - whoami
+#     # - OpenCppCoverage.exe --export_type cobertura:coverage.xml --source *\algorithm_module\* --modules "*algorithm_module*" --excluded_modules "*opencv*" --excluded_modules "*glog*" --excluded_modules "*Open3D*" --no_aggregate_by_file -- test_all.exe "$env:ONEDRIVE_HKCLR/test_data" --gtest_filter=-*Vis2D*:*Vis3D*:*VisualizeCalib* --gtest_output=xml:test_report.xml
+#     - ./test_all.exe  --gtest_filter=-*Connect* --gtest_output=xml:test_report.xml
+#     # - |
+#     #   [xml]$xml = Get-Content .\coverage.xml
+#     #   $rate = [math]::Round([double]$xml.coverage.'line-rate' * 100, 2)
+#     #   Write-Output "Coverage: $rate%"
+#   artifacts:
+#     when: always
+#     paths:
+#       # - build/bin/Debug/coverage.xml
+#       - build/bin/Release/test_report.xml
+#     reports:
+#       junit: build/bin/Release/test_report.xml
+#       # cobertura: build/bin/Debug/coverage.xml
+
+# publish_cpp_project:
+#   stage: publish
+#   needs:
+#     - job: build_cpp_project
+#       artifacts: true
+#     - job: test_cpp
+#   script:
+#     - echo "Publishing..."
+
+#     - $repo_name = "${CI_PROJECT_NAME}"
+#     - $commit_id = "${CI_COMMIT_SHORT_SHA}"
+
+#     - $zip_filename = "${repo_name}_install_${commit_id}.zip"
+#     - Get-ChildItem -Path "./" -Filter "*.lib" | Where-Object { $_.Name -notin $filesToKeep } | Remove-Item -Force # 删除不需要的 lib 文件
+#     - Compress-Archive -Path build/install/include, build/install/lib -DestinationPath build/$zip_filename
+#     - $zipFileSize = (Get-Item build/$zip_filename).Length / 1MB
+#     - Write-Host "Zip file size is $zipFileSize MB"
+
+#     - Write-Host "Uploading $zip_filename"
+#     - |
+#       curl --header "JOB-TOKEN: $CI_JOB_TOKEN" `
+#            --upload-file build/$zip_filename `
+#            "$PACKAGE_REGISTRY_URL/$zip_filename"
+#   only:
+#     - develop
+#     - master
