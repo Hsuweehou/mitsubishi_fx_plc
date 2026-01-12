@@ -1,5 +1,0 @@
-Language:        Cpp
-BasedOnStyle:  google
-ColumnLimit:     100
-IndentWidth:     4
-SortIncludes: false

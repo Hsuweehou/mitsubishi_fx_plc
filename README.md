@@ -1,15 +1,15 @@
-# mitsubishi fx Serial communication library - RS232通(serial)
+# 三菱FX - TCP通信(WinSock2)
 
 # Platform
-- rely on serial, a header only serial provide cross platform interface
+- rely on WinSock2,so only for Windows
 
 ## Make
 ```
 mkdir build && cd build 
 cmake .. -DCMAKE_BUILD_TYPE=Release
-vs 2019 compiler(msvc2019)
+vs 2019 compile
 ```
 ## Run
 ```
-./
+./mitsubishi_fx_tcp_plc.exe
 ```
