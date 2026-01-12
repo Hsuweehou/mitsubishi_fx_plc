@@ -1,7 +1,7 @@
-# »˝¡‚FX - TCPÕ®–≈(WinSock2)
+# Mitsubishi FX PLC - TCP(WinSock2)
 
 # Platform
-- rely on WinSock2,so only for Windows
+- rely on WinSock2, so only for Windows
 
 ## Make
 ```
